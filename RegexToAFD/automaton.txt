@@ -1,0 +1,30 @@
+=== DETERMINISTIC FINITE AUTOMATON (DFA) ===
+
+States:
+	Initial State: Q0
+	Final States: Q0, Q3, Q4
+	All States: Q0, Q1, Q2, Q3, Q4
+
+Transitions:
+	delta(Q0, a) = Q1
+	delta(Q0, c) = Q2
+	delta(Q1, b) = Q3
+	delta(Q2, d) = Q4
+	delta(Q3, a) = Q1
+	delta(Q3, c) = Q2
+	delta(Q4, a) = Q1
+	delta(Q4, c) = Q2
+
+Vocabulary: abcd
+
+=== Transition Function Table ===
+
+State\Symbol	a	b	c	d
+----------------------------------------
+Q0	Q1	-	Q2	- *
+Q1	-	Q3	-	-
+Q2	-	-	-	Q4
+Q3	Q1	-	Q2	- *
+Q4	Q1	-	Q2	- *
+
+* Marks final states

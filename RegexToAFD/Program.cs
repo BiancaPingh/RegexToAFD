@@ -803,60 +803,182 @@ class Program
         return afd;
     }
 
+    // Method to save automaton to file
+    public static void SaveAutomatonToFile(AFD afd, string filePath)
+    {
+        try
+        {
+            using (StreamWriter sw = new StreamWriter(filePath))
+            {
+                sw.WriteLine("=== DETERMINISTIC FINITE AUTOMATON (DFA) ===\n");
+                
+                sw.WriteLine("States:");
+                sw.WriteLine($"\tInitial State: {afd.States.StareInitiala}");
+                sw.WriteLine($"\tFinal States: {string.Join(", ", afd.States.StariFinale)}");
+                sw.WriteLine($"\tAll States: {string.Join(", ", afd.States.ToateStarile)}\n");
+                
+                sw.WriteLine("Transitions:");
+                foreach (var transition in afd.Transitions)
+                {
+                    sw.WriteLine($"\tdelta({transition.StareDePlecare}, {transition.CaracterDeTranzitieh}) = {transition.StareInCareAjunge}");
+                }
+                
+                sw.WriteLine($"\nVocabulary: {afd.vocabulary}");
+                
+                sw.WriteLine("\n=== Transition Function Table ===\n");
+                sw.Write("State\\Symbol");
+                foreach (char symbol in afd.vocabulary.ToCharArray())
+                {
+                    sw.Write($"\t{symbol}");
+                }
+                sw.WriteLine();
+                sw.WriteLine(new string('-', (afd.vocabulary.Length + 1) * 8));
+                
+                foreach (var state in afd.States.ToateStarile)
+                {
+                    sw.Write(state);
+                    foreach (char symbol in afd.vocabulary.ToCharArray())
+                    {
+                        bool found = false;
+                        foreach (var transition in afd.Transitions)
+                        {
+                            if (transition.StareDePlecare == state && transition.CaracterDeTranzitieh == symbol)
+                            {
+                                sw.Write($"\t{transition.StareInCareAjunge}");
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                        {
+                            sw.Write("\t-");
+                        }
+                    }
+                    
+                    if (afd.States.StariFinale.Contains(state))
+                    {
+                        sw.Write(" *");
+                    }
+                    sw.WriteLine();
+                }
+                
+                sw.WriteLine("\n* Marks final states");
+            }
+            Console.WriteLine($"Automaton saved to: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving automaton to file: {ex.Message}");
+        }
+    }
+
+    // Method to verify multiple words
+    public static void VerifyWords(AFD afd)
+    {
+        while (true)
+        {
+            Console.WriteLine("\nEnter a word to test (or 'back' to return to menu): ");
+            string word = Console.ReadLine();
+            
+            if (word.ToLower() == "back")
+                break;
+                
+            Console.WriteLine();
+            if (afd.IsStringAccepted(word))
+                Console.WriteLine($"Word '{word}' is ACCEPTED by the automaton");
+            else
+                Console.WriteLine($"Word '{word}' is NOT accepted by the automaton");
+        }
+    }
+
     static void Main(string[] args)
     {
-       string initialString = ReadingRegexFromFile("filepath");
-       string rewrittenString = RewritingRegexPatterns(initialString);
-         Console.WriteLine("Rewritten regex patterns:");
-         Console.WriteLine(rewrittenString);
-         
-       /* (Dictionary<stari, transitions> afnDict, List<char> vocabulary) = CreateAFNFromRegex(rewrittenString);
-
-        AFN afn = new AFN(afnDict,vocabulary);
-        afn.PrintAFN();
-
-        Console.WriteLine(
-            $"\n Converting AFN to AFD: \n"
-        );
-
-        AFD afd = ConvertAFNtoAFD(afn);
-        afd.PrintAFD();
-
-        // Verify the automaton
-        Console.WriteLine("\n=== Verifying Automaton ===");
-        afd.VerifyAutomaton();
-
-        // Print the transition table
-        Console.WriteLine();
-        afd.PrintAutomaton();
-
+        string initialString = ReadingRegexFromFile("filepath");
+        Console.WriteLine("\n========================================");
+        Console.WriteLine("REGEX TO DFA CONVERTER");
+        Console.WriteLine("========================================");
         
-        // Testing if strings are accepted by AFD
-        Console.WriteLine("\n=== Testing Strings ===\n");
-
-        if (afd.IsStringAccepted(""))
-            Console.WriteLine("Accepted");
-        else Console.WriteLine("not accepted");
-
-        if (afd.IsStringAccepted("abababababab"))
-            Console.WriteLine("Accepted");
-        else Console.WriteLine("not accepted");
-
-        //this shouldn't be accepted
-
-        if(afd.IsStringAccepted("abbaab"))
-            Console.WriteLine("Accepted");
-        else Console.WriteLine("not accepted");
-
-        if(afd.IsStringAccepted("cdcd"))
-            Console.WriteLine("Accepted");
-        else Console.WriteLine("not accepted");
-
-        */
+        // Convert regex to DFA
         AFD afd = RegexToDFA(initialString);
-        afd.VerifyAutomaton();  
-        afd.PrintAutomaton();
-
         
+        bool running = true;
+        while (running)
+        {
+            Console.WriteLine("\n========================================");
+            Console.WriteLine("MAIN MENU");
+            Console.WriteLine("========================================");
+            Console.WriteLine("1. Display postfix notation of regex");
+            Console.WriteLine("2. Display automaton in console");
+            Console.WriteLine("3. Display transition table");
+            Console.WriteLine("4. Save automaton to file");
+            Console.WriteLine("5. Verify words in automaton");
+            Console.WriteLine("6. Verify automaton validity");
+            Console.WriteLine("7. Exit");
+            Console.WriteLine("========================================");
+            Console.WriteLine("Choose an option (1-7): ");
+            
+            string choice = Console.ReadLine();
+            
+            switch (choice)
+            {
+                case "1":
+                    {
+                        Console.WriteLine("\n--- Postfix Notation ---");
+                        string postfixRegex = RewritingRegexPatterns(initialString);
+                        Console.WriteLine($"Original Regex: {initialString}");
+                        Console.WriteLine($"Postfix Notation: {postfixRegex}");
+                        break;
+                    }
+                    
+                case "2":
+                    {
+                        Console.WriteLine("\n--- Automaton Display ---");
+                        afd.PrintAFD();
+                        break;
+                    }
+                    
+                case "3":
+                    {
+                        Console.WriteLine("\n--- Transition Function Table ---");
+                        afd.PrintAutomaton();
+                        break;
+                    }
+                    
+                case "4":
+                    {
+                        Console.WriteLine("\nEnter output file path (full path): ");
+                        string filePath = Console.ReadLine();
+                        SaveAutomatonToFile(afd, filePath);
+                        break;
+                    }
+                    
+                case "5":
+                    {
+                        Console.WriteLine("\n--- Word Verification ---");
+                        VerifyWords(afd);
+                        break;
+                    }
+                    
+                case "6":
+                    {
+                        Console.WriteLine("\n--- Automaton Verification ---");
+                        afd.VerifyAutomaton();
+                        break;
+                    }
+                    
+                case "7":
+                    {
+                        Console.WriteLine("\nExiting program...");
+                        running = false;
+                        break;
+                    }
+                    
+                default:
+                    {
+                        Console.WriteLine("Invalid choice. Please select a valid option (1-7).");
+                        break;
+                    }
+            }
+        }
     }
 }
