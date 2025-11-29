@@ -114,7 +114,108 @@ class Program
             }
 
             return (States.StariFinale.Contains(currentState) && !transitionNotFound);
-              
+        }
+
+        public bool VerifyAutomaton()
+        {
+            // Verify initial state is in Q
+            if (!States.ToateStarile.Contains(States.StareInitiala))
+            {
+                Console.WriteLine("Error: Initial state is not in the set of states Q");
+                return false;
+            }
+
+            // Verify all final states are in Q
+            foreach (var finalState in States.StariFinale)
+            {
+                if (!States.ToateStarile.Contains(finalState))
+                {
+                    Console.WriteLine($"Error: Final state '{finalState}' is not in the set of states Q");
+                    return false;
+                }
+            }
+
+            // Verify all transitions contain only states from Q and symbols from vocabulary
+            foreach (var transition in Transitions)
+            {
+                // Check if the source state is in Q
+                if (!States.ToateStarile.Contains(transition.StareDePlecare))
+                {
+                    Console.WriteLine($"Error: Source state '{transition.StareDePlecare}' in transition is not in Q");
+                    return false;
+                }
+
+                // Check if the destination state is in Q
+                if (!States.ToateStarile.Contains(transition.StareInCareAjunge))
+                {
+                    Console.WriteLine($"Error: Destination state '{transition.StareInCareAjunge}' in transition is not in Q");
+                    return false;
+                }
+
+                // Check if the symbol is in the vocabulary
+                if (!vocabulary.Contains(transition.CaracterDeTranzitieh.ToString()))
+                {
+                    Console.WriteLine($"Error: Symbol '{transition.CaracterDeTranzitieh}' in transition is not in vocabulary");
+                    return false;
+                }
+            }
+
+            Console.WriteLine("Automaton is valid!");
+            return true;
+        }
+
+        public void PrintAutomaton()
+        {
+            Console.WriteLine("\n=== Transition Function Table (delta) ===\n");
+            Console.WriteLine("Format: delta(state, symbol) -> next_state\n");
+
+            // Create a table for easier visualization
+            // Header
+            Console.Write("State\\Symbol");
+            foreach (char symbol in vocabulary.ToCharArray())
+            {
+                Console.Write($"\t{symbol}");
+            }
+            Console.WriteLine();
+            Console.WriteLine(new string('-', (vocabulary.Length + 1) * 8));
+
+            // Rows for each state
+            foreach (var state in States.ToateStarile)
+            {
+                Console.Write(state);
+                foreach (char symbol in vocabulary.ToCharArray())
+                {
+                    // Find transition
+                    bool found = false;
+                    foreach (var transition in Transitions)
+                    {
+                        if (transition.StareDePlecare == state && transition.CaracterDeTranzitieh == symbol)
+                        {
+                            Console.Write($"\t{transition.StareInCareAjunge}");
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        Console.Write("\t-");
+                    }
+                }
+
+                // Mark final states
+                if (States.StariFinale.Contains(state))
+                {
+                    Console.Write(" *");
+                }
+
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("\n* Marks final states");
+            Console.WriteLine($"\nInitial state: {States.StareInitiala}");
+            Console.WriteLine($"Final states: {string.Join(", ", States.StariFinale)}");
+            Console.WriteLine($"Vocabulary: {vocabulary}");
         }
     }
 
@@ -683,6 +784,25 @@ class Program
 
     }
 
+    // RegexToDFA function - converts a regex pattern to a DFA
+    public static AFD RegexToDFA(string regexPattern)
+    {
+        // Read and preprocess the regex pattern
+        string preprocessedRegex = regexPattern;
+        
+        // Rewrite the regex to postfix notation
+        string postfixRegex = RewritingRegexPatterns(preprocessedRegex);
+        
+        // Create AFN from the postfix regex
+        (Dictionary<stari, transitions> afnDict, List<char> vocabulary) = CreateAFNFromRegex(postfixRegex);
+        AFN afn = new AFN(afnDict, vocabulary);
+        
+        // Convert AFN to DFA
+        AFD afd = ConvertAFNtoAFD(afn);
+        
+        return afd;
+    }
+
     static void Main(string[] args)
     {
        string initialString = ReadingRegexFromFile("filepath");
@@ -690,7 +810,7 @@ class Program
          Console.WriteLine("Rewritten regex patterns:");
          Console.WriteLine(rewrittenString);
          
-        (Dictionary<stari, transitions> afnDict, List<char> vocabulary) = CreateAFNFromRegex(rewrittenString);
+       /* (Dictionary<stari, transitions> afnDict, List<char> vocabulary) = CreateAFNFromRegex(rewrittenString);
 
         AFN afn = new AFN(afnDict,vocabulary);
         afn.PrintAFN();
@@ -702,7 +822,17 @@ class Program
         AFD afd = ConvertAFNtoAFD(afn);
         afd.PrintAFD();
 
+        // Verify the automaton
+        Console.WriteLine("\n=== Verifying Automaton ===");
+        afd.VerifyAutomaton();
+
+        // Print the transition table
+        Console.WriteLine();
+        afd.PrintAutomaton();
+
+        
         // Testing if strings are accepted by AFD
+        Console.WriteLine("\n=== Testing Strings ===\n");
 
         if (afd.IsStringAccepted(""))
             Console.WriteLine("Accepted");
@@ -721,5 +851,12 @@ class Program
         if(afd.IsStringAccepted("cdcd"))
             Console.WriteLine("Accepted");
         else Console.WriteLine("not accepted");
+
+        */
+        AFD afd = RegexToDFA(initialString);
+        afd.VerifyAutomaton();  
+        afd.PrintAutomaton();
+
+        
     }
 }
